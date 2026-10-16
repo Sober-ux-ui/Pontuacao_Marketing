@@ -9,7 +9,7 @@ const CONFIG = {
   LOGO_URL: './LOGOTIPO.png',
 
   // Intervalo de atualização em milissegundos (5 minutos)
-  REFRESH_INTERVAL: 5 * 60 * 1000,
+  REFRESH_INTERVAL: 10 * 60 * 1000,
 
   // Duração das animações em ms
   ANIM_DURATION: 1500,
@@ -360,8 +360,8 @@ function updateTimer() {
   const now = new Date();
   const min = now.getMinutes();
   const sec = now.getSeconds();
-  const elapsed = (min % 5) * 60 + sec;
-  const remaining = Math.max(0, 5 * 60 - elapsed);
+  const elapsed = (min % 10) * 60 + sec;
+  const remaining = Math.max(0, 10 * 60 - elapsed);
   const remMin = Math.floor(remaining / 60);
   const remSec = remaining % 60;
   const display = (remMin < 10 ? '0' : '') + remMin + ':' + (remSec < 10 ? '0' : '') + remSec;
@@ -417,8 +417,8 @@ function scheduleNextRefresh() {
   const now = new Date();
   const min = now.getMinutes();
   const sec = now.getSeconds();
-  const elapsed = (min % 5) * 60 + sec;
-  const msUntilNext = (5 * 60 - elapsed) * 1000 + 2000;
+  const elapsed = (min % 10) * 60 + sec;
+  const msUntilNext = (10 * 60 - elapsed) * 1000 + 2000;
   setTimeout(() => location.reload(), msUntilNext);
 }
 scheduleNextRefresh();
