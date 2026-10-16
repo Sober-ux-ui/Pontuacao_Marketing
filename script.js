@@ -3,13 +3,13 @@
 // ╚══════════════════════════════════════════════════════════╝
 const CONFIG = {
   // URL do JSON com os dados (gerado pelo Power Automate)
-  DATA_URL: 'https://api.github.com/repos/Sober-ux-ui/Pontuacao_Bom/contents/dados.json',
+  DATA_URL: 'https://api.github.com/repos/Sober-ux-ui/Pontuacao/contents/dados.json',
 
   // Logo do Movimento Soberana
   LOGO_URL: './LOGOTIPO.png',
 
   // Intervalo de atualização em milissegundos (5 minutos)
-  REFRESH_INTERVAL: 10 * 60 * 1000,
+  REFRESH_INTERVAL: 5 * 60 * 1000,
 
   // Duração das animações em ms
   ANIM_DURATION: 1500,
@@ -111,18 +111,23 @@ function processData(raw) {
     // Workshop aggregation
     const wsRows = raw.workshop.filter(w => w.WORKSHOP === curso);
     const wsCount = wsRows.length;
-    let wsAvg = [0,0,0,0], wsTotal = 0;
+    let wsAvg = [0,0,0,0], wsSum = [0,0,0,0], wsTotal = 0, wsSumTotal = 0, wsAvgOfAvg = 0;
     if (wsCount > 0) {
       CRITERIA.forEach((c,i) => {
-        wsAvg[i] = wsRows.reduce((s,r) => s + (r[c]||0), 0) / wsCount;
+        wsSum[i] = wsRows.reduce((s,r) => s + (r[c]||0), 0);
+        wsAvg[i] = wsSum[i] / wsCount;
       });
       wsTotal = Math.round(wsAvg.reduce((s,v) => s + v, 0) * 100) / 100;
+      wsSumTotal = wsSum.reduce((s,v) => s + v, 0);
+      wsAvgOfAvg = Math.round(wsAvg.reduce((s,v) => s + v, 0) / 4 * 100) / 100;
     }
 
     teams.push({
       curso, ...meta, actValues, gincanaTotal,
-      wsCount, wsAvg, wsTotal: wsCount > 0 ? wsTotal : null,
-      total: gincanaTotal + (wsCount > 0 ? wsTotal : 0),
+      wsCount, wsAvg, wsSum, wsTotal: wsCount > 0 ? wsTotal : null,
+      wsSumTotal: wsCount > 0 ? wsSumTotal : null,
+      wsAvgOfAvg: wsCount > 0 ? wsAvgOfAvg : null,
+      total: gincanaTotal + (wsCount > 0 ? wsSumTotal : 0),
     });
   }
 
@@ -182,8 +187,8 @@ function renderPontuacao(data) {
     t.actValues.forEach(v => {
       html += '<td><span class="cell-val" style="color:' + lc + '">' + v.toLocaleString('pt-BR') + '</span></td>';
     });
-    // Coluna Workshop
-    html += '<td><span class="cell-val" style="color:' + lc + '">' + (t.wsTotal !== null ? fmt2(t.wsTotal) : '—') + '</span></td>';
+    // Coluna Workshop (soma bruta = mesmo valor do Detalhamento)
+    html += '<td><span class="cell-val" style="color:' + lc + '">' + (t.wsSumTotal !== null ? fmt2(t.wsSumTotal) : '—') + '</span></td>';
     // Total
     html += '<td class="cell-total" style="color:' + lc + '">' + fmt2(t.total) + '</td>';
     html += '</tr>';
@@ -213,11 +218,11 @@ function renderWorkshop(data) {
     const lc = lightColor(t.color);
     html += '<tr class="team-row" style="--row-color:' + t.color + ';background:' + t.color + '25;color:' + lc + '">';
     html += '<td><div class="team-cell"><span class="team-dot" style="background:' + t.color + '"></span><span style="color:' + lc + '">' + t.emoji + ' ' + t.curso + '</span></div></td>';
-    t.wsAvg.forEach(v => {
-      html += '<td><span class="cell-val" style="color:' + lc + '">' + (has ? Math.round(v) : '—') + '</span></td>';
+    t.wsSum.forEach(v => {
+      html += '<td><span class="cell-val" style="color:' + lc + '">' + (has ? fmt2(v) : '—') + '</span></td>';
     });
     html += '<td style="color:' + lc + '">' + (has ? t.wsCount : '—') + '</td>';
-    html += '<td class="cell-total" style="color:' + lc + '">' + (has ? Math.round(t.wsTotal).toLocaleString('pt-BR') : '—') + '</td>';
+    html += '<td class="cell-total" style="color:' + lc + '">' + (has ? fmt2(t.wsSumTotal) : '—') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
@@ -239,7 +244,8 @@ function renderWorkshop(data) {
     html += '</div>';
     html += '<div class="ws-meta">' + t.wsCount + ' avaliação(ões)</div>';
     html += '</div>';
-    html += '<div class="ws-total-val" style="color:' + lc + '" data-anim="wst' + idx + '" data-val="' + p.total + '">' + fmt(p.total) + '</div>';
+    const cardTotal = has ? t.wsAvgOfAvg : 0;
+    html += '<div class="ws-total-val" style="color:' + lc + '" data-anim="wst' + idx + '" data-val="' + p.total + '">' + fmt2(p.total) + '</div>';
     html += '</div>';
     html += '<div class="ws-rows">';
     html += '<div class="ws-row-hdr"><span class="ws-row-label"></span><div class="ws-row-bar-wrap" style="visibility:hidden"></div><span class="ws-avg-hdr" style="color:' + lc + '">Média</span></div>';
@@ -261,7 +267,7 @@ function renderWorkshop(data) {
   requestAnimationFrame(() => {
     data.wsTeams.forEach((t, idx) => {
       if (t.wsTotal === null) return;
-      animateNumber(pane.querySelector('[data-anim="wst' + idx + '"]'), Math.round(t.wsTotal));
+      animateNumber(pane.querySelector('[data-anim="wst' + idx + '"]'), t.wsTotal, CONFIG.NUMBER_ANIM_DURATION, 2);
       t.wsAvg.forEach((v, ci) => {
         animateNumber(pane.querySelector('[data-anim="wsv' + idx + '_' + ci + '"]'), v, CONFIG.NUMBER_ANIM_DURATION, 1);
         pane.querySelector('[data-anim="wsb' + idx + '_' + ci + '"]').style.width = (v/25*100).toFixed(0) + '%';
@@ -272,7 +278,7 @@ function renderWorkshop(data) {
   });
 
   data.wsTeams.forEach(t => {
-    prevWs[t.curso] = { total: Math.round(t.wsTotal || 0), avg: [...t.wsAvg] };
+    prevWs[t.curso] = { total: t.wsTotal || 0, avg: [...t.wsAvg] };
   });
 }
 
@@ -354,8 +360,8 @@ function updateTimer() {
   const now = new Date();
   const min = now.getMinutes();
   const sec = now.getSeconds();
-  const elapsed = (min % 10) * 60 + sec;
-  const remaining = Math.max(0, 10 * 60 - elapsed);
+  const elapsed = (min % 5) * 60 + sec;
+  const remaining = Math.max(0, 5 * 60 - elapsed);
   const remMin = Math.floor(remaining / 60);
   const remSec = remaining % 60;
   const display = (remMin < 10 ? '0' : '') + remMin + ':' + (remSec < 10 ? '0' : '') + remSec;
@@ -411,8 +417,8 @@ function scheduleNextRefresh() {
   const now = new Date();
   const min = now.getMinutes();
   const sec = now.getSeconds();
-  const elapsed = (min % 10) * 60 + sec;
-  const msUntilNext = (10 * 60 - elapsed) * 1000 + 2000;
+  const elapsed = (min % 5) * 60 + sec;
+  const msUntilNext = (5 * 60 - elapsed) * 1000 + 2000;
   setTimeout(() => location.reload(), msUntilNext);
 }
 scheduleNextRefresh();
