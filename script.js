@@ -5,11 +5,12 @@ const CONFIG = {
   // URL do JSON com os dados (gerado pelo Power Automate)
   DATA_URL: 'https://api.github.com/repos/Sober-ux-ui/Pontuacao/contents/dados.json',
 
-  // Logo do Movimento Soberana
+  // Logo do Movimento Soberana (branca = fundo escuro, preta = fundo claro)
   LOGO_URL: './LOGOTIPO.png',
+  LOGO_URL_LIGHT: './LOGOTIPO_dark.png',
 
   // Intervalo de atualização em milissegundos (5 minutos)
-  REFRESH_INTERVAL: 10 * 60 * 1000,
+  REFRESH_INTERVAL: 5 * 60 * 1000,
 
   // Duração das animações em ms
   ANIM_DURATION: 1500,
@@ -38,8 +39,8 @@ const TEAMS = {
   'GESTÃO HOSPITALAR':    { pk:'GH',   color:'#474747', emoji:'🏨' },
 };
 
-// Versões claras das cores para texto legível no fundo escuro
-const LIGHT_COLORS = {
+// Versões claras das cores (para fundo escuro)
+const COLORS_ON_DARK = {
   '#00276f': '#4d7abf',
   '#013f33': '#2eb89a',
   '#328ac4': '#5eaee0',
@@ -50,7 +51,48 @@ const LIGHT_COLORS = {
   '#6c0c0a': '#d45450',
   '#474747': '#a0a0a0',
 };
-function lightColor(c) { return LIGHT_COLORS[c] || c; }
+// Versões escuras das cores (para fundo claro)
+const COLORS_ON_LIGHT = {
+  '#00276f': '#00276f',
+  '#013f33': '#013f33',
+  '#328ac4': '#1a6fa0',
+  '#540b55': '#540b55',
+  '#aa402f': '#8a3020',
+  '#4b331e': '#4b331e',
+  '#4a9b9f': '#2e7578',
+  '#6c0c0a': '#6c0c0a',
+  '#474747': '#333333',
+};
+function isDark() { return document.documentElement.getAttribute('data-theme') !== 'light'; }
+function lightColor(c) { return (isDark() ? COLORS_ON_DARK[c] : COLORS_ON_LIGHT[c]) || c; }
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  TEMA CLARO / ESCURO                                     ║
+// ╚══════════════════════════════════════════════════════════╝
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeBtn');
+  btn.textContent = theme === 'light' ? '☀️' : '🌙';
+  // Troca a logo conforme o tema
+  const img = document.getElementById('logo');
+  if (img) img.src = theme === 'light' ? CONFIG.LOGO_URL_LIGHT : CONFIG.LOGO_URL;
+  try { localStorage.setItem('soberana-theme', theme); } catch(e) {}
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  // Re-renderiza para atualizar as cores inline
+  refresh();
+}
+
+// Aplica tema salvo ou padrão escuro
+(function initTheme() {
+  let saved = 'dark';
+  try { saved = localStorage.getItem('soberana-theme') || 'dark'; } catch(e) {}
+  applyTheme(saved);
+})();
 
 const ACTIVITIES = [
   'CESTA BÁSICA','BRINQUEDOS','DOAÇÃO DE SANGUE','CAMINHADA',
@@ -360,8 +402,8 @@ function updateTimer() {
   const now = new Date();
   const min = now.getMinutes();
   const sec = now.getSeconds();
-  const elapsed = (min % 10) * 60 + sec;
-  const remaining = Math.max(0, 10 * 60 - elapsed);
+  const elapsed = (min % 5) * 60 + sec;
+  const remaining = Math.max(0, 5 * 60 - elapsed);
   const remMin = Math.floor(remaining / 60);
   const remSec = remaining % 60;
   const display = (remMin < 10 ? '0' : '') + remMin + ':' + (remSec < 10 ? '0' : '') + remSec;
@@ -417,8 +459,8 @@ function scheduleNextRefresh() {
   const now = new Date();
   const min = now.getMinutes();
   const sec = now.getSeconds();
-  const elapsed = (min % 10) * 60 + sec;
-  const msUntilNext = (10 * 60 - elapsed) * 1000 + 2000;
+  const elapsed = (min % 5) * 60 + sec;
+  const msUntilNext = (5 * 60 - elapsed) * 1000 + 2000;
   setTimeout(() => location.reload(), msUntilNext);
 }
 scheduleNextRefresh();

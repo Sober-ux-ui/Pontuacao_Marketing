@@ -7,6 +7,25 @@
   --green:#22C55E;--yellow:#FBBF24;--red:#EF4444;
   --ease:cubic-bezier(.25,.46,.45,.94);
 }
+/* ═══════════════ TEMA CLARO ═══════════════ */
+[data-theme="light"]{
+  --bg:#F0F2F5;--surface:#FFFFFF;--surface-alt:#E8ECF1;--border:#D1D5DB;
+  --text:#1E293B;--text-sec:#475569;--text-muted:#94A3B8;--accent:#6366F1;
+  --gold:#B8860B;--silver:#6B7280;--bronze:#92400E;
+  --green:#16A34A;--yellow:#CA8A04;--red:#DC2626;
+}
+[data-theme="light"] .nav{background:#FFFFFF;border-bottom-color:#D1D5DB}
+[data-theme="light"] .tab{background:#E8ECF1;color:#64748B}
+[data-theme="light"] .tab.on{background:var(--accent);color:#fff}
+[data-theme="light"] .tv-btn{background:#E8ECF1;border-color:#D1D5DB;color:#475569}
+[data-theme="light"] .theme-btn{background:#E8ECF1;border-color:#D1D5DB;color:#475569}
+[data-theme="light"] .score-table th{background:#E8ECF1;color:#475569}
+[data-theme="light"] .score-table tr.team-row td{border-color:rgba(0,0,0,.06)}
+[data-theme="light"] .ws-card{background:#FFFFFF;border-color:#D1D5DB}
+[data-theme="light"] .ws-row-bar-wrap{background:#E8ECF1}
+[data-theme="light"] .timer-label{color:rgba(0,0,0,.5)}
+[data-theme="light"] .timer-row svg{stroke:#1E293B}
+
 html{overflow-x:hidden;width:100%}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow-x:hidden;min-height:100vh;width:100%;max-width:100%}
 
@@ -30,6 +49,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-ap
 .tab.on{background:var(--accent);color:#fff}
 .tv-btn{padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text-sec);background:#0E1729;transition:all .25s var(--ease);white-space:nowrap;font-family:inherit}
 .tv-btn:hover{color:var(--text)}
+.theme-btn{width:36px;height:36px;border-radius:8px;font-size:18px;cursor:pointer;border:1px solid var(--border);color:var(--text-sec);background:#0E1729;transition:all .25s var(--ease);display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit;line-height:1}
 .tv-btn.on{background:var(--green);border-color:var(--green);color:#052e16}
 .timer-wrap{display:flex;flex-direction:column;align-items:center;gap:1px;flex-shrink:0}
 .timer-row{display:flex;align-items:center;gap:6px}
