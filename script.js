@@ -217,10 +217,10 @@ function renderPontuacao(data) {
   let html = '';
 
   // Tabela Gincana com coluna Workshop e Total geral
-  html += '<div class="section-title">Gincana <span class="badge">11 atividades + Workshop</span></div>';
+  html += '<div class="section-title">Gincana <span class="badge">11 atividades + Experiência</span></div>';
   html += '<div class="tbl-wrap"><table class="score-table"><thead><tr><th>Equipe</th>';
   ACT_SHORT.forEach(a => html += '<th>' + a + '</th>');
-  html += '<th>Workshop</th><th>TOTAL</th></tr></thead><tbody>';
+  html += '<th>Experiência</th><th>TOTAL</th></tr></thead><tbody>';
 
   data.teams.forEach(t => {
     const lc = lightColor(t.color);
@@ -251,7 +251,7 @@ function renderWorkshop(data) {
   let html = '';
 
   // ── Tabela Workshop ──
-  html += '<div class="section-title">Workshop — Detalhamento <span class="badge">4 critérios</span></div>';
+  html += '<div class="section-title">Experiência — Detalhamento <span class="badge">4 critérios</span></div>';
   html += '<div class="tbl-wrap"><table class="score-table"><thead><tr><th>Equipe</th>';
   CRIT_SHORT.forEach(c => html += '<th>' + c + '</th>');
   html += '<th>Aval.</th><th>TOTAL</th></tr></thead><tbody>';
@@ -271,7 +271,7 @@ function renderWorkshop(data) {
 
   // ── Cards Workshop ──
   html += '<div class="table-sep"></div>';
-  html += '<div class="section-title">Workshop — Avaliação do público <span class="badge">Detalhes por curso</span></div><div class="ws-grid">';
+  html += '<div class="section-title">Experiência — Avaliação do público <span class="badge">Detalhes por curso</span></div><div class="ws-grid">';
   data.wsTeams.forEach((t, idx) => {
     const has = t.wsTotal !== null;
     const opac = has ? '1' : '0.4';
