@@ -9,8 +9,8 @@ const CONFIG = {
   LOGO_URL: './LOGOTIPO.png',
   LOGO_URL_LIGHT: './LOGOTIPO_dark.png',
 
-  // Intervalo de atualização em milissegundos (5 minutos)
-  REFRESH_INTERVAL: 5 * 60 * 1000,
+  // Intervalo de atualização em milissegundos (10 minutos)
+  REFRESH_INTERVAL: 10 * 60 * 1000,
 
   // Duração das animações em ms
   ANIM_DURATION: 1500,
@@ -99,7 +99,7 @@ const ACTIVITIES = [
   'BÔNUS PESSOA REGISTRADA','DESFILE DE SCRUB','SOBERANA DANCE',
   'CURTIDAS','COMENTÁRIOS','COMPARTILHAMENTOS','BÔNUS VÍDEO'
 ];
-const ACT_SHORT = ['Cesta','Brinquedos','Doação de Sangue','Caminhada','Bônus Registro','Desfile','Soberana Dance','Curtida','Comentário','Compartilhamento','Bônus do Vídeo'];
+const ACT_SHORT = ['Cesta','Brinquedos','Doação de Sangue','Caminhada','Bônus Caminhada','Desfile','Soberana Dance','Curtida','Comentário','Compartilhamento','Bônus do Vídeo'];
 const CRITERIA = ['Experiência geral','Criatividade e inovação','Conhecimento técnico','Organização e envolvimento'];
 const CRIT_SHORT = ['Experiência','Criatividade','Conhecimento','Organização'];
 
@@ -395,15 +395,15 @@ function toggleTV(force) {
 }
 
 // ╔══════════════════════════════════════════════════════════╗
-// ║  TIMER — Sincronizado com múltiplos de 5 min no relógio  ║
+// ║  TIMER — Sincronizado com múltiplos de 10 min no relógio  ║
 // ╚══════════════════════════════════════════════════════════╝
 
 function updateTimer() {
   const now = new Date();
   const min = now.getMinutes();
   const sec = now.getSeconds();
-  const elapsed = (min % 5) * 60 + sec;
-  const remaining = Math.max(0, 5 * 60 - elapsed);
+  const elapsed = (min % 10) * 60 + sec;
+  const remaining = Math.max(0, 10 * 60 - elapsed);
   const remMin = Math.floor(remaining / 60);
   const remSec = remaining % 60;
   const display = (remMin < 10 ? '0' : '') + remMin + ':' + (remSec < 10 ? '0' : '') + remSec;
@@ -454,13 +454,13 @@ async function refresh() {
 // Carga inicial
 refresh();
 
-// Agenda o reload no próximo múltiplo de 5 min do relógio
+// Agenda o reload no próximo múltiplo de 10 min do relógio
 function scheduleNextRefresh() {
   const now = new Date();
   const min = now.getMinutes();
   const sec = now.getSeconds();
-  const elapsed = (min % 5) * 60 + sec;
-  const msUntilNext = (5 * 60 - elapsed) * 1000 + 2000;
+  const elapsed = (min % 10) * 60 + sec;
+  const msUntilNext = (10 * 60 - elapsed) * 1000 + 2000;
   setTimeout(() => location.reload(), msUntilNext);
 }
 scheduleNextRefresh();
