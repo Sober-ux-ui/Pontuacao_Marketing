@@ -13,6 +13,9 @@ const CONFIG = {
   LOGO_URL: './LOGOTIPO.png',
   LOGO_URL_LIGHT: './LOGOTIPO_dark.png',
 
+  // De quanto em quanto tempo o site confere se o dados.json mudou (1 minuto)
+  POLL_INTERVAL: 60 * 1000,
+
   // Duração da animação dos números em ms
   NUMBER_ANIM_DURATION: 1200,
 
@@ -355,15 +358,25 @@ async function fetchData() {
   }
 }
 
+let lastSignature = null;
+
 async function refresh() {
   const data = await fetchData();
   if (!data) { if (!lastData) renderError(); return; }
+  // Só redesenha a tela quando alguma nota (ou curso) mudou
+  const signature = JSON.stringify(data.teams.map(t => [t.curso, t.total]));
+  if (signature === lastSignature) return;
+  lastSignature = signature;
   lastData = data;
   render(data);
 }
 
 // Carga inicial
 refresh();
+
+// Confere o dados.json periodicamente: quando o Power Automate grava
+// notas novas, a classificação se atualiza sozinha, sem recarregar a página
+setInterval(refresh, CONFIG.POLL_INTERVAL);
 
 // Agenda o reload no próximo múltiplo de 10 min do relógio
 function scheduleNextRefresh() {
