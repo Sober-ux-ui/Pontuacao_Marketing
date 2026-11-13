@@ -9,9 +9,8 @@ const CONFIG = {
   // desde que o repositório seja público.
   DATA_URL: './dados.json',
 
-  // Logo do Movimento Soberana (branca = fundo escuro, preta = fundo claro)
+  // Logo do Movimento Soberana (versão branca, para o fundo escuro)
   LOGO_URL: './LOGOTIPO.png',
-  LOGO_URL_LIGHT: './LOGOTIPO_dark.png',
 
   // De quanto em quanto tempo o site confere se o dados.json mudou (1 minuto)
   POLL_INTERVAL: 60 * 1000,
@@ -43,7 +42,7 @@ const TEAMS = {
 };
 const UNKNOWN_TEAM = { color:'#6366f1', emoji:'🎓' };
 
-// Versões claras das cores (para fundo escuro)
+// Versões claras das cores (para o texto sobre o fundo escuro)
 const COLORS_ON_DARK = {
   '#00276f': '#4d7abf',
   '#013f33': '#2eb89a',
@@ -56,41 +55,7 @@ const COLORS_ON_DARK = {
   '#474747': '#a0a0a0',
   '#6366f1': '#a5b4fc',
 };
-// Versões escuras das cores (para fundo claro)
-const COLORS_ON_LIGHT = {
-  '#00276f': '#00276f',
-  '#013f33': '#013f33',
-  '#328ac4': '#1a6fa0',
-  '#540b55': '#540b55',
-  '#aa402f': '#8a3020',
-  '#4b331e': '#4b331e',
-  '#4a9b9f': '#2e7578',
-  '#6c0c0a': '#6c0c0a',
-  '#474747': '#333333',
-  '#6366f1': '#4338ca',
-};
-function isDark() { return document.documentElement.getAttribute('data-theme') !== 'light'; }
-function lightColor(c) { return (isDark() ? COLORS_ON_DARK[c] : COLORS_ON_LIGHT[c]) || c; }
-
-// ╔══════════════════════════════════════════════════════════╗
-// ║  TEMA CLARO / ESCURO                                     ║
-// ╚══════════════════════════════════════════════════════════╝
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  const btn = document.getElementById('themeBtn');
-  btn.textContent = theme === 'light' ? '☀️' : '🌙';
-  // Troca a logo conforme o tema
-  const img = document.getElementById('logo');
-  if (img) img.src = theme === 'light' ? CONFIG.LOGO_URL_LIGHT : CONFIG.LOGO_URL;
-  try { localStorage.setItem('soberana-theme', theme); } catch(e) {}
-}
-
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'dark';
-  applyTheme(current === 'dark' ? 'light' : 'dark');
-  // Re-renderiza para atualizar as cores inline (sem buscar os dados de novo)
-  if (lastData) render(lastData);
-}
+function lightColor(c) { return COLORS_ON_DARK[c] || c; }
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  LOGO                                                    ║
@@ -100,13 +65,7 @@ function toggleTheme() {
   const ph = document.getElementById('logoPh');
   img.onload = () => { img.classList.add('show'); ph.classList.add('hide'); };
   img.onerror = () => { img.classList.remove('show'); ph.classList.remove('hide'); };
-})();
-
-// Aplica tema salvo ou padrão escuro (também define a logo)
-(function initTheme() {
-  let saved = 'dark';
-  try { saved = localStorage.getItem('soberana-theme') || 'dark'; } catch(e) {}
-  applyTheme(saved);
+  img.src = CONFIG.LOGO_URL;
 })();
 
 // ╔══════════════════════════════════════════════════════════╗
@@ -312,26 +271,6 @@ function toggleTV(force) {
   btn.textContent = tvOn ? '📺 Modo TV: ligado' : '📺 Modo TV';
   if (tvOn) tvLoop(tvRun);
 }
-
-// ╔══════════════════════════════════════════════════════════╗
-// ║  TIMER — Sincronizado com múltiplos de 10 min no relógio  ║
-// ╚══════════════════════════════════════════════════════════╝
-function updateTimer() {
-  const now = new Date();
-  const elapsed = (now.getMinutes() % 10) * 60 + now.getSeconds();
-  const remaining = Math.max(0, 10 * 60 - elapsed);
-  const remMin = Math.floor(remaining / 60);
-  const remSec = remaining % 60;
-
-  const el = document.getElementById('timer');
-  el.textContent = (remMin < 10 ? '0' : '') + remMin + ':' + (remSec < 10 ? '0' : '') + remSec;
-
-  if (remMin >= 3) el.style.color = '#22C55E';
-  else if (remMin >= 1) el.style.color = '#FBBF24';
-  else el.style.color = '#EF4444';
-}
-setInterval(updateTimer, 1000);
-updateTimer();
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  FETCH & REFRESH                                          ║
