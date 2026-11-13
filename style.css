@@ -15,14 +15,10 @@
   --green:#16A34A;--yellow:#CA8A04;--red:#DC2626;
 }
 [data-theme="light"] .nav{background:#FFFFFF;border-bottom-color:#D1D5DB}
-[data-theme="light"] .tab{background:#E8ECF1;color:#64748B}
-[data-theme="light"] .tab.on{background:var(--accent);color:#fff}
 [data-theme="light"] .tv-btn{background:#E8ECF1;border-color:#D1D5DB;color:#475569}
 [data-theme="light"] .theme-btn{background:#E8ECF1;border-color:#D1D5DB;color:#475569}
-[data-theme="light"] .score-table th{background:#E8ECF1;color:#475569}
-[data-theme="light"] .score-table tr.team-row td{border-color:rgba(0,0,0,.06)}
-[data-theme="light"] .ws-card{background:#FFFFFF;border-color:#D1D5DB}
-[data-theme="light"] .ws-row-bar-wrap{background:#E8ECF1}
+[data-theme="light"] .rank-row{border-color:rgba(0,0,0,.06)}
+[data-theme="light"] .rank-bar-wrap{background:rgba(0,0,0,.08)}
 [data-theme="light"] .timer-label{color:rgba(0,0,0,.5)}
 [data-theme="light"] .timer-row svg{stroke:#1E293B}
 
@@ -43,10 +39,6 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-ap
 .logo.show{display:block}
 .logo-ph{height:36px;min-width:36px;padding:0 6px;border-radius:8px;border:1px dashed var(--text-muted);color:var(--text-muted);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:1px}
 .logo-ph.hide{display:none}
-.tabs{display:flex;gap:5px}
-.tab{padding:8px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;color:var(--text-muted);background:#0E1729;transition:all .25s var(--ease);user-select:none;white-space:nowrap}
-.tab:hover{color:var(--text-sec)}
-.tab.on{background:var(--accent);color:#fff}
 .tv-btn{padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text-sec);background:#0E1729;transition:all .25s var(--ease);white-space:nowrap;font-family:inherit}
 .tv-btn:hover{color:var(--text)}
 .theme-btn{width:36px;height:36px;border-radius:8px;font-size:18px;cursor:pointer;border:1px solid var(--border);color:var(--text-sec);background:#0E1729;transition:all .25s var(--ease);display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit;line-height:1}
@@ -56,67 +48,40 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-ap
 .timer-val{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:2px;transition:color .5s}
 .timer-label{font-size:10px;color:rgba(255,255,255,.7);font-weight:600}
 
-/* ═══════════ NAVBAR VERTICAL (< 800px) ═══════════ */
+/* ═══════════ NAVBAR EM TELAS ESTREITAS (< 800px) ═══════════ */
 @media(max-width:800px){
   .nav{flex-wrap:wrap;height:auto;padding:10px 16px;gap:8px;justify-content:space-between}
-  .nav-left{order:1;flex:0 0 auto}
   .nav-left .nav-title{font-size:14px}
   .nav-left .logo,.nav-left .logo.show{height:30px}
-  .nav-right{order:2;flex:0 0 auto;gap:10px}
+  .nav-right{gap:10px}
   .tv-btn{padding:6px 10px;font-size:11px}
   .timer-val{font-size:18px}
-  .tabs{order:3;flex:1 0 100%;justify-content:center;gap:4px}
-  .tab{padding:7px 0;font-size:13px;flex:1;text-align:center;border-radius:6px}
 }
 
 /* ═══════════════ CONTENT ═══════════════ */
-.pane{display:none;padding:32px 24px;animation:fadeUp .5s var(--ease);width:100%;max-width:100%}
+.pane{display:none;padding:32px 24px;animation:fadeUp .5s var(--ease);width:100%;max-width:1100px;margin:0 auto}
 .pane.on{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.section-title{font-weight:700;font-size:22px;margin-bottom:16px;color:var(--text-sec)}
+.msg{text-align:center;padding:48px 16px;font-size:16px;color:var(--text-muted)}
 
-/* ═══════════════ SCORE TABLES ═══════════════ */
-.section-title{font-weight:700;font-size:22px;margin-bottom:20px;color:var(--text-sec);display:flex;align-items:center;gap:8px}
-.badge{font-size:12px;padding:4px 12px;border-radius:6px;background:var(--accent);color:#fff;font-weight:600}
-.tbl-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.score-table{width:100%;border-collapse:separate;border-spacing:0 2px;font-size:15px;min-width:720px}
-.score-table th{background:var(--surface-alt);padding:14px 6px;font-weight:600;color:var(--text-sec);text-align:center;font-size:12px}
-.score-table th:first-child{text-align:left;padding-left:14px;border-radius:10px 0 0 0}
-.score-table th:last-child{border-radius:0 10px 0 0}
-.score-table td{padding:14px 6px;text-align:center;transition:background .3s}
-.score-table td:first-child{text-align:left;padding-left:14px;font-weight:600}
-.score-table tr.team-row td{border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05)}
-.score-table tr.team-row td:first-child{border-left:4px solid var(--row-color);border-radius:6px 0 0 6px}
-.score-table tr.team-row td:last-child{border-radius:0 6px 6px 0}
-.team-cell{display:flex;align-items:center;gap:8px}
-.team-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-.cell-val{display:inline-block;padding:4px 7px;border-radius:5px;font-weight:600;min-width:40px;color:var(--text)}
-.cell-total{font-weight:800;font-size:18px}
-.table-sep{height:50px}
+/* ═══════════════ CLASSIFICAÇÃO ═══════════════ */
+.rank-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.rank-row{display:grid;grid-template-columns:56px minmax(0,1.3fr) minmax(0,2fr) auto;align-items:center;gap:16px;padding:16px 20px 16px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.05);border-left:4px solid var(--row-color)}
+.rank-pos{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center}
+.rank-row.top1 .rank-pos{color:var(--gold)}
+.rank-row.top2 .rank-pos{color:var(--silver)}
+.rank-row.top3 .rank-pos{color:var(--bronze)}
+.rank-name{font-size:19px;font-weight:700;overflow-wrap:anywhere}
+.rank-bar-wrap{height:12px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
+.rank-bar{height:100%;border-radius:6px;transition:width 1.5s var(--ease)}
+.rank-val{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;min-width:90px}
 
-/* ═══════════════ WORKSHOP CARDS ═══════════════ */
-.ws-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.ws-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;position:relative;overflow:hidden;transition:opacity .6s,transform .6s var(--ease)}
-.ws-card-bar{position:absolute;top:0;left:0;right:0;height:4px}
-.ws-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.ws-name{font-weight:700;font-size:20px}
-.ws-total-val{font-weight:800;font-size:36px}
-.ws-rank{font-weight:700;font-size:22px;margin-right:6px}
-.ws-meta{font-size:12px;color:var(--text-muted);margin-top:3px}
-.ws-rows{display:flex;flex-direction:column;gap:14px}
-.ws-row-hdr{display:flex;align-items:center;gap:12px;margin-bottom:2px}
-.ws-row{display:flex;align-items:center;gap:12px}
-.ws-row-label{font-size:16px;min-width:130px}
-.ws-row-bar-wrap{flex:1;height:12px;background:var(--surface-alt);border-radius:6px;overflow:hidden}
-.ws-row-bar{height:100%;border-radius:6px;transition:width 1.5s var(--ease)}
-.ws-row-val{font-size:18px;font-weight:700;min-width:44px;text-align:right}
-.ws-avg-hdr{font-size:11px;font-weight:600;min-width:44px;text-align:right}
-.ws-waiting{text-align:center;padding:12px 0;font-size:14px;color:var(--text-muted);margin-top:6px}
-
-/* ═══════════════ UPDATE FLASH ═══════════════ */
-.flash{animation:flashPulse 1s ease}
-@keyframes flashPulse{0%{box-shadow:0 0 0 0 rgba(99,102,241,.4)}50%{box-shadow:0 0 20px 4px rgba(99,102,241,.2)}100%{box-shadow:0 0 0 0 transparent}}
-
-/* ═══════════════ LOADING ═══════════════ */
-.loading{display:flex;align-items:center;justify-content:center;height:60vh;flex-direction:column;gap:16px}
-.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:700px){
+  .pane{padding:20px 16px}
+  .rank-row{grid-template-columns:40px minmax(0,1fr) auto;gap:6px 10px;padding:12px 14px 12px 10px}
+  .rank-pos{font-size:19px}
+  .rank-name{font-size:15px}
+  .rank-val{font-size:20px;min-width:0}
+  .rank-bar-wrap{grid-column:1 / -1;grid-row:2;height:8px}
+}
