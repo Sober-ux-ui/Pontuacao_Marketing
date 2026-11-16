@@ -15,13 +15,20 @@
     <div class="logo-ph" id="logoPh">LOGO</div>
     <span class="nav-title">Movimento Soberana 2026</span>
   </div>
+  <div class="tabs">
+    <div class="tab on" onclick="switchTab(0)">Ranking</div>
+    <div class="tab" onclick="switchTab(1)">Detalhes</div>
+  </div>
   <div class="nav-right">
     <button class="tv-btn" id="tvBtn" onclick="toggleTV()">📺 Modo TV</button>
   </div>
 </nav>
 
-<!-- ═══════════════ CLASSIFICAÇÃO ═══════════════ -->
-<main id="content" class="pane"></main>
+<!-- ═══════════════ ABAS: RANKING / DETALHES ═══════════════ -->
+<main>
+  <div id="pane0" class="pane on"></div>
+  <div id="pane1" class="pane wide"></div>
+</main>
 
 <script src="script.js"></script>
 </body>

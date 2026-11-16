@@ -2,17 +2,16 @@
 // ║  CONFIGURAÇÃO                                            ║
 // ╚══════════════════════════════════════════════════════════╝
 const CONFIG = {
-  // Onde está o JSON gerado pelo Power Automate.
-  // Padrão: o dados.json deste mesmo repositório.
-  // Também aceita uma URL da API do GitHub
-  // (https://api.github.com/repos/<dono>/<repo>/contents/dados.json),
-  // desde que o repositório seja público.
-  DATA_URL: './dados.json',
+  // Arquivos gerados pelo Power Automate, neste mesmo repositório.
+  // Experiência: nota final de cada curso  -> [ { "CURSO": "...", "NOTA": 100 }, ... ]
+  // Gincana: pontos por atividade          -> [ { "CURSO": "...", "BRINQUEDOS": 10, "ALIMENTOS": 20, ... }, ... ]
+  EXPERIENCIA_URL: './dados_experiencia.json',
+  GINCANA_URL: './dados_gincana.json',
 
   // Logo do Movimento Soberana (versão branca, para o fundo escuro)
   LOGO_URL: './LOGOTIPO.png',
 
-  // De quanto em quanto tempo o site confere se o dados.json mudou (1 minuto)
+  // De quanto em quanto tempo o site confere se os dados mudaram (1 minuto)
   POLL_INTERVAL: 60 * 1000,
 
   // Duração da animação dos números em ms
@@ -25,6 +24,21 @@ const CONFIG = {
   TV_DWELL_BOTTOM: 2500,
   TV_DWELL_END: 1500,
 };
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  ATIVIDADES DA GINCANA (colunas da aba Detalhes)         ║
+// ║  "match" diz qual coluna do dados_gincana.json alimenta  ║
+// ║  cada atividade (sem acentos, em maiúsculas).            ║
+// ╚══════════════════════════════════════════════════════════╝
+const ACTIVITIES = [
+  { label: 'Brinquedos',       match: /BRINQUEDO/ },
+  { label: 'Alimentos',        match: /ALIMENTO|CESTA/ },
+  { label: 'Doação de Sangue', match: /SANGUE/ },
+  { label: 'Vídeo',            match: /VIDEO/ },
+  { label: 'Caminhada',        match: /CAMINHADA/ },
+  { label: 'Desfile',          match: /DESFILE/ },
+  { label: 'Soberana Dance',   match: /DANCE/ },
+];
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  DADOS DAS EQUIPES                                       ║
@@ -69,10 +83,7 @@ function lightColor(c) { return COLORS_ON_DARK[c] || c; }
 })();
 
 // ╔══════════════════════════════════════════════════════════╗
-// ║  LEITURA DO dados.json                                   ║
-// ║  Formato esperado: uma lista com curso e nota, ex.:      ║
-// ║  [ { "CURSO": "ODONTOLOGIA", "NOTA": 867.5 }, ... ]      ║
-// ║  Os nomes das colunas podem variar (ver regras abaixo).  ║
+// ║  LEITURA DOS ARQUIVOS DE DADOS                           ║
 // ╚══════════════════════════════════════════════════════════╝
 const NAME_KEY  = /curso|workshop|equipe|time|nome/i;
 const SCORE_KEY = /nota|pontua|pontos|total|score|valor/i;
@@ -88,7 +99,7 @@ function toNumber(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-// Remove acentos e padroniza para comparar nomes de curso
+// Remove acentos e padroniza para comparar nomes de curso e de coluna
 function normName(s) {
   return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim().toUpperCase();
 }
@@ -107,36 +118,70 @@ function findRows(raw) {
   return [];
 }
 
-function readRow(row) {
-  if (!row || typeof row !== 'object') return null;
+// Coluna que guarda o nome do curso
+function findNameKey(row) {
   const keys = Object.keys(row);
+  return keys.find(k => NAME_KEY.test(k) && typeof row[k] === 'string')
+      || keys.find(k => typeof row[k] === 'string' && toNumber(row[k]) === null);
+}
 
-  let nameKey = keys.find(k => NAME_KEY.test(k) && typeof row[k] === 'string');
-  if (!nameKey) nameKey = keys.find(k => typeof row[k] === 'string' && toNumber(row[k]) === null);
+// Linha do dados_experiencia.json -> { name, score }
+function readExperienciaRow(row) {
+  if (!row || typeof row !== 'object') return null;
+  const nameKey = findNameKey(row);
   if (!nameKey) return null;
-
-  let scoreKey = keys.find(k => k !== nameKey && SCORE_KEY.test(k) && toNumber(row[k]) !== null);
-  if (!scoreKey) scoreKey = keys.find(k => k !== nameKey && toNumber(row[k]) !== null);
-
   const name = String(row[nameKey]).trim();
   if (!name) return null;
+
+  const keys = Object.keys(row).filter(k => k !== nameKey);
+  const scoreKey = keys.find(k => SCORE_KEY.test(k) && toNumber(row[k]) !== null)
+                || keys.find(k => toNumber(row[k]) !== null);
   return { name, score: scoreKey ? toNumber(row[scoreKey]) : 0 };
 }
 
-function processData(raw) {
+// Linha do dados_gincana.json -> { name, acts: [pontos de cada atividade] }
+function readGincanaRow(row) {
+  if (!row || typeof row !== 'object') return null;
+  const nameKey = findNameKey(row);
+  if (!nameKey) return null;
+  const name = String(row[nameKey]).trim();
+  if (!name) return null;
+
+  const keys = Object.keys(row).filter(k => k !== nameKey);
+  const acts = ACTIVITIES.map(a => {
+    const key = keys.find(k => a.match.test(normName(k)));
+    return key ? (toNumber(row[key]) || 0) : 0;
+  });
+  return { name, acts };
+}
+
+const round2 = v => Math.round(v * 100) / 100;
+
+function processData(expRaw, ginRaw) {
   const byCourse = new Map();
-  for (const row of findRows(raw)) {
-    const r = readRow(row);
-    if (!r) continue;
-    const norm = normName(r.name);
-    const curso = TEAM_BY_NORM[norm] || r.name.toUpperCase();
-    // A nota do dados.json já é a nota final: nada é somado.
-    // Se o mesmo curso aparecer mais de uma vez, vale a última linha.
-    byCourse.set(norm, { curso, total: r.score, ...(TEAMS[curso] || UNKNOWN_TEAM) });
+  const entry = name => {
+    const norm = normName(name);
+    if (!byCourse.has(norm)) {
+      const curso = TEAM_BY_NORM[norm] || name.toUpperCase();
+      byCourse.set(norm, { curso, ...(TEAMS[curso] || UNKNOWN_TEAM), acts: ACTIVITIES.map(() => 0), exp: 0 });
+    }
+    return byCourse.get(norm);
+  };
+
+  // Os valores dos arquivos já são finais: nada é somado entre linhas.
+  // Se o mesmo curso aparecer mais de uma vez num arquivo, vale a última linha.
+  for (const row of findRows(ginRaw)) {
+    const r = readGincanaRow(row);
+    if (r) entry(r.name).acts = r.acts;
+  }
+  for (const row of findRows(expRaw)) {
+    const r = readExperienciaRow(row);
+    if (r) entry(r.name).exp = r.score;
   }
 
   const teams = [...byCourse.values()];
-  teams.forEach(t => { t.total = Math.round(t.total * 100) / 100; });
+  // Total do curso = pontos de todas as atividades + Experiência
+  teams.forEach(t => { t.total = round2(t.acts.reduce((s, v) => s + v, 0) + t.exp); });
   teams.sort((a, b) => b.total - a.total || a.curso.localeCompare(b.curso, 'pt-BR'));
   // Cursos empatados ficam na mesma posição
   teams.forEach((t, i) => { t.rank = i > 0 && teams[i - 1].total === t.total ? teams[i - 1].rank : i + 1; });
@@ -167,18 +212,16 @@ function animateNumber(el, target, duration = CONFIG.NUMBER_ANIM_DURATION) {
 }
 
 // ╔══════════════════════════════════════════════════════════╗
-// ║  RENDERIZAÇÃO — classificação                            ║
+// ║  ABA 1 — RANKING (posição + total de cada curso)         ║
 // ╚══════════════════════════════════════════════════════════╝
 let lastData = null;
 let prevTotals = {};
 
-function render(data) {
-  const pane = document.getElementById('content');
-  const n = data.teams.length;
-  let html = '';
+function renderRanking(data) {
+  const pane = document.getElementById('pane0');
+  let html = '<div class="section-title">Ranking</div>';
 
-  html += '<div class="section-title">Classificação</div>';
-  if (!n) {
+  if (!data.teams.length) {
     html += '<div class="msg">Ainda não há pontuações registradas.</div>';
   } else {
     html += '<ol class="rank-list">';
@@ -197,7 +240,6 @@ function render(data) {
   }
 
   pane.innerHTML = html;
-  pane.classList.add('on');
   void pane.offsetWidth;
 
   requestAnimationFrame(() => {
@@ -212,14 +254,63 @@ function render(data) {
   data.teams.forEach(t => { prevTotals[t.curso] = t.total; });
 }
 
+// ╔══════════════════════════════════════════════════════════╗
+// ║  ABA 2 — DETALHES (pontos por atividade, sem posições)   ║
+// ╚══════════════════════════════════════════════════════════╝
+function renderDetalhes(data) {
+  const pane = document.getElementById('pane1');
+  let html = '<div class="section-title">Detalhes</div>';
+
+  if (!data.teams.length) {
+    html += '<div class="msg">Ainda não há pontuações registradas.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="score-table"><thead><tr><th>Curso</th>';
+    ACTIVITIES.forEach(a => { html += '<th>' + esc(a.label) + '</th>'; });
+    html += '<th>Experiência</th><th>Total</th></tr></thead><tbody>';
+
+    // Mesma ordem do ranking (maior total primeiro), mas sem mostrar a posição
+    data.teams.forEach(t => {
+      const lc = lightColor(t.color);
+      html += '<tr class="team-row" style="--row-color:' + t.color + ';background:' + t.color + '25;color:' + lc + '">';
+      html += '<td>' + t.emoji + ' ' + esc(t.curso) + '</td>';
+      t.acts.forEach(v => { html += '<td>' + fmt(v) + '</td>'; });
+      html += '<td>' + fmt(t.exp) + '</td>';
+      html += '<td class="cell-total">' + fmt(t.total) + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  pane.innerHTML = html;
+}
+
+function render(data) {
+  renderRanking(data);
+  renderDetalhes(data);
+}
+
 function renderError() {
-  const pane = document.getElementById('content');
-  pane.innerHTML = '<div class="msg">Não foi possível carregar a pontuação. Nova tentativa na próxima atualização.</div>';
-  pane.classList.add('on');
+  const msg = '<div class="msg">Não foi possível carregar a pontuação. Nova tentativa em instantes.</div>';
+  document.getElementById('pane0').innerHTML = msg;
+  document.getElementById('pane1').innerHTML = msg;
 }
 
 // ╔══════════════════════════════════════════════════════════╗
-// ║  MODO TV — rolagem lenta quando a lista não cabe na tela ║
+// ║  ABAS                                                    ║
+// ╚══════════════════════════════════════════════════════════╝
+let currentTab = 0;
+
+function switchTab(n, auto = false) {
+  currentTab = n;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('on', i === n));
+  document.querySelectorAll('.pane').forEach((p, i) => p.classList.toggle('on', i === n));
+  window.scrollTo(0, 0);
+  // Troca manual durante o Modo TV: recomeça o ciclo a partir da aba escolhida
+  if (!auto && tvOn) { tvRun++; tvLoop(tvRun); }
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  MODO TV — alterna as abas e rola quando não cabe na tela ║
 // ╚══════════════════════════════════════════════════════════╝
 let tvOn = false;
 let tvRun = 0;
@@ -260,6 +351,9 @@ async function tvLoop(id) {
     } else {
       await tvWait(CONFIG.TV_DWELL_STATIC);                      if (id !== tvRun) return;
     }
+
+    // Passa para a outra aba
+    switchTab((currentTab + 1) % 2, true);
   }
 }
 
@@ -275,10 +369,11 @@ function toggleTV(force) {
 // ╔══════════════════════════════════════════════════════════╗
 // ║  FETCH & REFRESH                                          ║
 // ╚══════════════════════════════════════════════════════════╝
-async function fetchData() {
+// Devolve o JSON do arquivo, ou null se não der para ler
+async function fetchJson(baseUrl) {
   try {
-    // O parâmetro ?t= evita que o navegador/CDN devolva uma versão antiga
-    const url = CONFIG.DATA_URL + (CONFIG.DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+    // O parâmetro ?t= evita que o navegador devolva uma versão antiga
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     let raw = await res.json();
@@ -290,11 +385,20 @@ async function fetchData() {
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       raw = JSON.parse(new TextDecoder('utf-8').decode(bytes));
     }
-    return processData(raw);
+    return raw;
   } catch (err) {
-    console.error('Erro ao buscar dados:', err);
+    console.error('Erro ao buscar ' + baseUrl + ':', err);
     return null;
   }
+}
+
+async function fetchData() {
+  const [exp, gin] = await Promise.all([fetchJson(CONFIG.EXPERIENCIA_URL), fetchJson(CONFIG.GINCANA_URL)]);
+  if (exp === null && gin === null) return null;
+  // Falha passageira em um dos arquivos: mantém o que já está na tela
+  if (lastData && (exp === null || gin === null)) return null;
+  // Primeira carga com um arquivo faltando: mostra o que existe
+  return processData(exp || [], gin || []);
 }
 
 let lastSignature = null;
@@ -302,8 +406,8 @@ let lastSignature = null;
 async function refresh() {
   const data = await fetchData();
   if (!data) { if (!lastData) renderError(); return; }
-  // Só redesenha a tela quando alguma nota (ou curso) mudou
-  const signature = JSON.stringify(data.teams.map(t => [t.curso, t.total]));
+  // Só redesenha a tela quando algum valor (ou curso) mudou
+  const signature = JSON.stringify(data.teams.map(t => [t.curso, t.acts, t.exp]));
   if (signature === lastSignature) return;
   lastSignature = signature;
   lastData = data;
@@ -313,11 +417,12 @@ async function refresh() {
 // Carga inicial
 refresh();
 
-// Confere o dados.json periodicamente: quando o Power Automate grava
-// notas novas, a classificação se atualiza sozinha, sem recarregar a página
+// Confere os arquivos periodicamente: quando o Power Automate grava
+// pontos novos, as duas abas se atualizam sozinhas, sem recarregar a página
 setInterval(refresh, CONFIG.POLL_INTERVAL);
 
-// Agenda o reload no próximo múltiplo de 10 min do relógio
+// Recarrega a página no próximo múltiplo de 10 min do relógio,
+// para que telas deixadas abertas peguem mudanças no próprio site
 function scheduleNextRefresh() {
   const now = new Date();
   const elapsed = (now.getMinutes() % 10) * 60 + now.getSeconds();
