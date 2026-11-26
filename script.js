@@ -323,9 +323,13 @@ function tvWait(ms) {
   return new Promise(res => setTimeout(res, ms));
 }
 
-function tvScrollTo(to, id) {
+// Rola devagar até a posição "to".
+// el = null rola a página na vertical; el = elemento rola esse elemento na horizontal.
+function tvScrollTo(to, id, el = null) {
+  const get = () => el ? el.scrollLeft : window.scrollY;
+  const set = v => { if (el) el.scrollLeft = v; else window.scrollTo(0, v); };
   return new Promise(res => {
-    const from = window.scrollY;
+    const from = get();
     const dist = Math.abs(to - from);
     if (dist < 2) return res();
     const dur = dist / CONFIG.TV_SCROLL_SPEED * 1000;
@@ -334,7 +338,7 @@ function tvScrollTo(to, id) {
       if (id !== tvRun) return res();
       const p = Math.min((now - t0) / dur, 1);
       const eased = 0.5 - Math.cos(p * Math.PI) / 2;
-      window.scrollTo(0, from + (to - from) * eased);
+      set(from + (to - from) * eased);
       if (p < 1) requestAnimationFrame(step); else res();
     }
     requestAnimationFrame(step);
@@ -344,13 +348,27 @@ function tvScrollTo(to, id) {
 async function tvLoop(id) {
   while (id === tvRun) {
     window.scrollTo(0, 0);
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    // Tabela da aba Detalhes: pode ser mais larga que a tela
+    const wrap = document.querySelectorAll('.pane')[currentTab].querySelector('.tbl-wrap');
+    if (wrap) wrap.scrollLeft = 0;
+    const maxY = document.documentElement.scrollHeight - window.innerHeight;
+    const maxX = wrap ? wrap.scrollWidth - wrap.clientWidth : 0;
 
-    if (maxScroll > 8) {
+    if (maxX > 8 || maxY > 8) {
       await tvWait(CONFIG.TV_DWELL_TOP_SCROLL);                  if (id !== tvRun) return;
-      await tvScrollTo(document.documentElement.scrollHeight - window.innerHeight, id); if (id !== tvRun) return;
-      await tvWait(CONFIG.TV_DWELL_BOTTOM);                      if (id !== tvRun) return;
-      await tvScrollTo(0, id);                                   if (id !== tvRun) return;
+      // Para o lado: mostra as colunas que não cabem e volta
+      if (maxX > 8) {
+        await tvScrollTo(maxX, id, wrap);                        if (id !== tvRun) return;
+        await tvWait(CONFIG.TV_DWELL_BOTTOM);                    if (id !== tvRun) return;
+        await tvScrollTo(0, id, wrap);                           if (id !== tvRun) return;
+      }
+      // Para baixo: mostra as linhas que não cabem e volta
+      if (maxY > 8) {
+        if (maxX > 8) { await tvWait(CONFIG.TV_DWELL_END);       if (id !== tvRun) return; }
+        await tvScrollTo(maxY, id);                              if (id !== tvRun) return;
+        await tvWait(CONFIG.TV_DWELL_BOTTOM);                    if (id !== tvRun) return;
+        await tvScrollTo(0, id);                                 if (id !== tvRun) return;
+      }
       await tvWait(CONFIG.TV_DWELL_END);                         if (id !== tvRun) return;
     } else {
       await tvWait(CONFIG.TV_DWELL_STATIC);                      if (id !== tvRun) return;
