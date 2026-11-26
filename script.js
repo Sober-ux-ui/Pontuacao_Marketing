@@ -48,13 +48,15 @@ const TEAMS = {
   'FARMÁCIA':             { color:'#328ac4', emoji:'💊' },
   'ENFERMAGEM':           { color:'#013f33', emoji:'🏥' },
   'PSICOLOGIA':           { color:'#540b55', emoji:'🧠' },
-  'TERAPIA OCUPACIONAL':  { color:'#aa402f', emoji:'🤲' },
   'MEDICINA VETERINÁRIA': { color:'#4b331e', emoji:'🐾' },
   'BIOMEDICINA':          { color:'#4a9b9f', emoji:'🔬' },
   'ESTÉTICA E COSMÉTICA': { color:'#6c0c0a', emoji:'✨' },
   'GESTÃO HOSPITALAR':    { color:'#474747', emoji:'🏨' },
 };
 const UNKNOWN_TEAM = { color:'#6366f1', emoji:'🎓' };
+
+// Cursos que não participam mais: são ignorados mesmo se aparecerem nos arquivos de dados
+const HIDDEN_COURSES = ['TERAPIA OCUPACIONAL'];
 
 // Versões claras das cores (para o texto sobre o fundo escuro)
 const COLORS_ON_DARK = {
@@ -105,6 +107,7 @@ function normName(s) {
 }
 const TEAM_BY_NORM = {};
 Object.keys(TEAMS).forEach(k => { TEAM_BY_NORM[normName(k)] = k; });
+const HIDDEN_NORM = new Set(HIDDEN_COURSES.map(normName));
 
 // Encontra a lista de linhas dentro do JSON, seja qual for o "envelope"
 function findRows(raw) {
@@ -170,13 +173,14 @@ function processData(expRaw, ginRaw) {
 
   // Os valores dos arquivos já são finais: nada é somado entre linhas.
   // Se o mesmo curso aparecer mais de uma vez num arquivo, vale a última linha.
+  const visible = r => r && !HIDDEN_NORM.has(normName(r.name));
   for (const row of findRows(ginRaw)) {
     const r = readGincanaRow(row);
-    if (r) entry(r.name).acts = r.acts;
+    if (visible(r)) entry(r.name).acts = r.acts;
   }
   for (const row of findRows(expRaw)) {
     const r = readExperienciaRow(row);
-    if (r) entry(r.name).exp = r.score;
+    if (visible(r)) entry(r.name).exp = r.score;
   }
 
   const teams = [...byCourse.values()];
