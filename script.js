@@ -431,7 +431,19 @@ function scheduleNextRefresh() {
   const now = new Date();
   const elapsed = (now.getMinutes() % 10) * 60 + now.getSeconds();
   const msUntilNext = (10 * 60 - elapsed) * 1000 + 2000;
-  setTimeout(() => location.reload(), msUntilNext);
+  setTimeout(reloadIfSiteChanged, msUntilNext);
+}
+
+// Recarrega só se a página publicada mudou, buscando-a sem cache.
+// Assim as TVs pegam uma versão nova do site sem esperar o cache do GitHub.
+async function reloadIfSiteChanged() {
+  try {
+    const res = await fetch(location.pathname + '?t=' + Date.now(), { cache: 'no-store' });
+    const html = await res.text();
+    const current = document.querySelector('script[src*="script.js"]').getAttribute('src');
+    if (res.ok && !html.includes(current)) { location.replace(location.pathname + location.search); return; }
+  } catch (e) {}
+  scheduleNextRefresh();
 }
 scheduleNextRefresh();
 
