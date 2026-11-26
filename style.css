@@ -46,37 +46,69 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-ap
 }
 
 /* ═══════════════ CONTENT ═══════════════ */
-.pane{display:none;padding:32px 24px;animation:fadeUp .5s var(--ease);width:100%;max-width:1100px;margin:0 auto}
-.pane.wide{max-width:1500px}
-.pane.on{display:block}
+/* A página ocupa a tela inteira: a aba aberta estica até o rodapé
+   e as linhas do Ranking e da tabela de Detalhes dividem a altura. */
+body{display:flex;flex-direction:column;min-height:100dvh}
+main{flex:1;display:flex;flex-direction:column}
+.pane{display:none;padding:32px 24px;animation:fadeUp .5s var(--ease);width:100%;max-width:max(1100px,75vw);margin:0 auto}
+.pane.wide{max-width:max(1500px,90vw)}
+.pane.on{display:flex;flex-direction:column;flex:1}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .section-title{font-weight:700;font-size:22px;margin-bottom:16px;color:var(--text-sec)}
 .msg{text-align:center;padding:48px 16px;font-size:16px;color:var(--text-muted)}
 
 /* ═══════════════ CLASSIFICAÇÃO ═══════════════ */
-.rank-list{list-style:none;display:flex;flex-direction:column;gap:6px}
-.rank-row{display:grid;grid-template-columns:56px minmax(0,1.3fr) minmax(0,2fr) auto;align-items:center;gap:16px;padding:16px 20px 16px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.05);border-left:4px solid var(--row-color)}
-.rank-pos{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center}
+.rank-list{list-style:none;display:flex;flex-direction:column;gap:6px;flex:1}
+/* font-size da linha = tamanho do nome; a coluna do nome reserva 13.6em,
+   o suficiente para "MEDICINA VETERINÁRIA" caber numa linha só */
+.rank-row{flex:1 1 0;font-size:clamp(19px,min(3vh,2vw),80px);display:grid;grid-template-columns:clamp(56px,5vw,88px) minmax(13.6em,1.3fr) minmax(0,2fr) auto;align-items:center;gap:16px;padding:16px 20px 16px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.05);border-left:4px solid var(--row-color)}
+/* Os textos crescem com a tela (limitados pela altura e pela largura) */
+.rank-pos{font-size:clamp(24px,min(3.6vh,2.4vw),96px);font-weight:800;font-variant-numeric:tabular-nums;text-align:center}
 .rank-row.top1 .rank-pos{color:var(--gold)}
 .rank-row.top2 .rank-pos{color:var(--silver)}
 .rank-row.top3 .rank-pos{color:var(--bronze)}
-.rank-name{font-size:19px;font-weight:700;overflow-wrap:anywhere}
-.rank-bar-wrap{height:12px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
-.rank-bar{height:100%;border-radius:6px;transition:width 1.5s var(--ease)}
-.rank-val{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;min-width:90px}
+.rank-name{font-size:1em;font-weight:700;overflow-wrap:anywhere}
+.rank-bar-wrap{height:clamp(12px,1.6vh,44px);background:rgba(255,255,255,.08);border-radius:11px;overflow:hidden}
+.rank-bar{height:100%;border-radius:11px;transition:width 1.5s var(--ease)}
+.rank-val{font-size:clamp(26px,min(4.2vh,2.8vw),112px);font-weight:800;font-variant-numeric:tabular-nums;text-align:right;min-width:90px}
 
 /* ═══════════════ DETALHES (tabela por atividade) ═══════════════ */
-.tbl-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.score-table{width:100%;border-collapse:separate;border-spacing:0 4px;font-size:17px;min-width:940px;font-variant-numeric:tabular-nums}
-.score-table th{background:var(--surface-alt);padding:14px 8px;font-weight:600;color:var(--text-sec);text-align:center;font-size:13px}
+.tbl-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column}
+.score-table{flex:1;width:100%;border-collapse:separate;border-spacing:0 4px;font-size:clamp(17px,min(3.4vh,2.2vw),64px);min-width:940px;font-variant-numeric:tabular-nums}
+.score-table thead tr{height:1px}
+.score-table th{background:var(--surface-alt);padding:clamp(8px,1.3vh,26px) 8px;font-weight:600;color:var(--text-sec);text-align:center;font-size:clamp(13px,min(2.1vh,1.3vw),44px)}
 .score-table th:first-child{text-align:left;padding-left:16px;border-radius:10px 0 0 10px}
 .score-table th:last-child{border-radius:0 10px 10px 0}
-.score-table td{padding:16px 8px;text-align:center;font-weight:600}
+.score-table td{padding:clamp(6px,1.2vh,24px) 8px;text-align:center;font-weight:600}
 .score-table td:first-child{text-align:left;padding-left:14px;font-weight:700;white-space:nowrap}
 .score-table tr.team-row td{border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05)}
 .score-table tr.team-row td:first-child{border-left:4px solid var(--row-color);border-radius:8px 0 0 8px}
 .score-table tr.team-row td:last-child{border-right:1px solid rgba(255,255,255,.05);border-radius:0 8px 8px 0}
-.score-table .cell-total{font-weight:800;font-size:20px}
+.score-table .cell-total{font-weight:800;font-size:clamp(20px,min(4vh,2.6vw),80px)}
+
+/* ═══════════ TV EM PÉ (retrato, ex.: 2160×3840 ou 1080×1920) ═══════════
+   Sobra altura e falta largura: tudo passa a crescer pela largura da tela
+   e a barra do Ranking vai para baixo do nome, liberando espaço para o texto. */
+@media(orientation:portrait) and (min-width:1000px){
+  .nav{height:5vw;padding:0 2.5vw;gap:2vw}
+  .nav-title{font-size:2vw}
+  .logo,.logo.show,.logo-ph{height:3.4vw;max-width:9vw}
+  .tab{padding:.7vw 2vw;font-size:1.5vw;border-radius:.8vw}
+  .tv-btn{padding:.6vw 1.2vw;font-size:1.2vw;border-radius:.8vw}
+  .pane,.pane.wide{max-width:none;padding:2.5vw 2vw}
+  .rank-list{gap:1vw}
+  .rank-row{font-size:4.2vw;grid-template-columns:9vw minmax(0,1fr) auto;grid-template-rows:auto auto;align-content:center;gap:1.6vw 2.5vw;padding:2vw 3vw 2vw 2vw;border-radius:1.4vw;border-left-width:.6vw}
+  .rank-pos{font-size:5.4vw;grid-row:1 / 3}
+  .rank-name{font-size:1em}
+  .rank-val{font-size:6vw;min-width:0}
+  .rank-bar-wrap{grid-column:2 / 4;grid-row:2;height:1.6vw;border-radius:.8vw}
+  .rank-bar{border-radius:.8vw}
+  .score-table{font-size:1.95vw;min-width:0;border-spacing:0 .6vw}
+  .score-table th{font-size:1.5vw;padding:1.4vw .6vw}
+  .score-table td{padding:1.4vw .6vw}
+  .score-table td:first-child{padding-left:1.4vw}
+  .score-table .cell-total{font-size:2.8vw}
+}
 
 @media(max-width:700px){
   .pane{padding:20px 16px}
