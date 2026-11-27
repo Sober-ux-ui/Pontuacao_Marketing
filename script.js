@@ -443,32 +443,5 @@ refresh();
 // pontos novos, as duas abas se atualizam sozinhas, sem recarregar a página
 setInterval(refresh, CONFIG.POLL_INTERVAL);
 
-// Recarrega a página inteira a cada 10 min (nos minutos :00, :10, :20...),
-// como um Ctrl+F5: ignora o cache e busca a página e os dados de novo.
-function scheduleNextRefresh() {
-  const now = new Date();
-  const elapsed = (now.getMinutes() % 10) * 60 + now.getSeconds();
-  const msUntilNext = (10 * 60 - elapsed) * 1000 + 2000;
-  setTimeout(reloadPage, msUntilNext);
-}
-
-async function reloadPage() {
-  try {
-    // Só recarrega se o site responder; sem internet, a tela atual continua
-    const res = await fetch(location.pathname + '?t=' + Date.now(), { cache: 'no-store' });
-    if (res.ok) {
-      // O parâmetro "r" muda a cada vez, então o navegador não usa a página do cache.
-      // Se o Modo TV estiver ligado, ele continua ligado depois de recarregar.
-      const params = new URLSearchParams(location.search);
-      params.set('r', Date.now());
-      params.set('tv', tvOn ? '1' : '0');
-      location.replace(location.pathname + '?' + params.toString());
-      return;
-    }
-  } catch (e) {}
-  scheduleNextRefresh();
-}
-scheduleNextRefresh();
-
 // O Modo TV já começa ligado. Para abrir com ele desligado, use ?tv=0 no endereço.
 if (new URLSearchParams(location.search).get('tv') !== '0') toggleTV(true);
