@@ -7,6 +7,9 @@ const CONFIG = {
   // Gincana: pontos por atividade          -> [ { "CURSO": "...", "BRINQUEDOS": 10, "ALIMENTOS": 20, ... }, ... ]
   EXPERIENCIA_URL: './dados_experiencia.json',
   GINCANA_URL: './dados_gincana.json',
+  // Penalidades: pontos a descontar      -> [ { "CURSO": "...", "PENALIDADE": 20 }, ... ]
+  // O valor é sempre descontado do total, com ou sem o sinal de menos no arquivo.
+  PENALIDADES_URL: './dados_penalidades.json',
 
   // Logo do Movimento Soberana (versão branca, para o fundo escuro)
   LOGO_URL: './LOGOTIPO.png',
@@ -160,16 +163,21 @@ function readGincanaRow(row) {
 
 const round2 = v => Math.round(v * 100) / 100;
 
-function processData(expRaw, ginRaw) {
+function processData(expRaw, ginRaw, penRaw) {
   const byCourse = new Map();
   const entry = name => {
     const norm = normName(name);
     if (!byCourse.has(norm)) {
       const curso = TEAM_BY_NORM[norm] || name.toUpperCase();
-      byCourse.set(norm, { curso, ...(TEAMS[curso] || UNKNOWN_TEAM), acts: ACTIVITIES.map(() => 0), exp: 0 });
+      byCourse.set(norm, { curso, ...(TEAMS[curso] || UNKNOWN_TEAM), acts: ACTIVITIES.map(() => 0), exp: 0, pen: 0 });
     }
     return byCourse.get(norm);
   };
+  const penByCourse = new Map();
+  for (const row of findRows(penRaw)) {
+    const r = readExperienciaRow(row);
+    if (r) penByCourse.set(normName(r.name), Math.abs(r.score || 0));
+  }
 
   // Os valores dos arquivos já são finais: nada é somado entre linhas.
   // Se o mesmo curso aparecer mais de uma vez num arquivo, vale a última linha.
@@ -183,9 +191,12 @@ function processData(expRaw, ginRaw) {
     if (visible(r)) entry(r.name).exp = r.score;
   }
 
+  // Penalidade só vale para cursos que já aparecem nos outros arquivos
+  byCourse.forEach((t, norm) => { t.pen = penByCourse.get(norm) || 0; });
+
   const teams = [...byCourse.values()];
-  // Total do curso = pontos de todas as atividades + Experiência
-  teams.forEach(t => { t.total = round2(t.acts.reduce((s, v) => s + v, 0) + t.exp); });
+  // Total do curso = pontos de todas as atividades + Experiência − Penalidades
+  teams.forEach(t => { t.total = round2(t.acts.reduce((s, v) => s + v, 0) + t.exp - t.pen); });
   teams.sort((a, b) => b.total - a.total || a.curso.localeCompare(b.curso, 'pt-BR'));
   // Cursos empatados ficam na mesma posição
   teams.forEach((t, i) => { t.rank = i > 0 && teams[i - 1].total === t.total ? teams[i - 1].rank : i + 1; });
@@ -270,7 +281,7 @@ function renderDetalhes(data) {
   } else {
     html += '<div class="tbl-wrap"><table class="score-table"><thead><tr><th>Curso</th>';
     ACTIVITIES.forEach(a => { html += '<th>' + esc(a.label) + '</th>'; });
-    html += '<th>Experiência</th><th>Total</th></tr></thead><tbody>';
+    html += '<th>Experiência</th><th class="th-pen">Penalidades</th><th>Total</th></tr></thead><tbody>';
 
     // Mesma ordem do ranking (maior total primeiro), mas sem mostrar a posição
     data.teams.forEach(t => {
@@ -279,6 +290,7 @@ function renderDetalhes(data) {
       html += '<td>' + t.emoji + ' ' + esc(t.curso) + '</td>';
       t.acts.forEach(v => { html += '<td>' + fmt(v) + '</td>'; });
       html += '<td>' + fmt(t.exp) + '</td>';
+      html += '<td class="cell-pen">' + (t.pen > 0 ? '−' + fmt(t.pen) : '0') + '</td>';
       html += '<td class="cell-total">' + fmt(t.total) + '</td>';
       html += '</tr>';
     });
@@ -415,12 +427,14 @@ async function fetchJson(baseUrl) {
 }
 
 async function fetchData() {
-  const [exp, gin] = await Promise.all([fetchJson(CONFIG.EXPERIENCIA_URL), fetchJson(CONFIG.GINCANA_URL)]);
+  const [exp, gin, pen] = await Promise.all([
+    fetchJson(CONFIG.EXPERIENCIA_URL), fetchJson(CONFIG.GINCANA_URL), fetchJson(CONFIG.PENALIDADES_URL),
+  ]);
   if (exp === null && gin === null) return null;
   // Falha passageira em um dos arquivos: mantém o que já está na tela
-  if (lastData && (exp === null || gin === null)) return null;
+  if (lastData && (exp === null || gin === null || pen === null)) return null;
   // Primeira carga com um arquivo faltando: mostra o que existe
-  return processData(exp || [], gin || []);
+  return processData(exp || [], gin || [], pen || []);
 }
 
 let lastSignature = null;
@@ -429,7 +443,7 @@ async function refresh() {
   const data = await fetchData();
   if (!data) { if (!lastData) renderError(); return; }
   // Só redesenha a tela quando algum valor (ou curso) mudou
-  const signature = JSON.stringify(data.teams.map(t => [t.curso, t.acts, t.exp]));
+  const signature = JSON.stringify(data.teams.map(t => [t.curso, t.acts, t.exp, t.pen]));
   if (signature === lastSignature) return;
   lastSignature = signature;
   lastData = data;
