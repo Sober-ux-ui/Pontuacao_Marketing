@@ -74,7 +74,7 @@ main{flex:1;display:flex;flex-direction:column}
 
 /* ═══════════════ DETALHES (tabela por atividade) ═══════════════ */
 .tbl-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column}
-.score-table{flex:1;width:100%;border-collapse:separate;border-spacing:0 4px;font-size:clamp(17px,min(3.4vh,2.2vw),64px);min-width:940px;font-variant-numeric:tabular-nums}
+.score-table{flex:1;width:100%;border-collapse:separate;border-spacing:0 4px;font-size:clamp(17px,min(3.4vh,2.2vw),64px);min-width:1020px;font-variant-numeric:tabular-nums}
 .score-table thead tr{height:1px}
 .score-table th{background:var(--surface-alt);padding:clamp(8px,1.3vh,26px) 8px;font-weight:600;color:var(--text-sec);text-align:center;font-size:clamp(13px,min(2.1vh,1.3vw),44px)}
 .score-table th:first-child{text-align:left;padding-left:16px;border-radius:10px 0 0 10px}
@@ -85,6 +85,9 @@ main{flex:1;display:flex;flex-direction:column}
 .score-table tr.team-row td:first-child{border-left:4px solid var(--row-color);border-radius:8px 0 0 8px}
 .score-table tr.team-row td:last-child{border-right:1px solid rgba(255,255,255,.05);border-radius:0 8px 8px 0}
 .score-table .cell-total{font-weight:800;font-size:clamp(20px,min(4vh,2.6vw),80px)}
+/* Penalidades: coluna em vermelho, valores com sinal de menos */
+.score-table th.th-pen{color:#F87171}
+.score-table td.cell-pen{color:#F87171;font-weight:700}
 
 /* ═══════════ TV EM PÉ (retrato, ex.: 2160×3840 ou 1080×1920) ═══════════
    Sobra altura e falta largura: tudo passa a crescer pela largura da tela
@@ -103,16 +106,16 @@ main{flex:1;display:flex;flex-direction:column}
   .rank-val{font-size:6vw;min-width:0}
   .rank-bar-wrap{grid-column:2 / 4;grid-row:2;height:1.6vw;border-radius:.8vw}
   .rank-bar{border-radius:.8vw}
-  .score-table{font-size:1.95vw;min-width:0;border-spacing:0 .6vw}
-  .score-table th{font-size:1.5vw;padding:1.4vw .6vw}
-  .score-table td{padding:1.4vw .6vw}
+  .score-table{font-size:1.75vw;min-width:0;border-spacing:0 .6vw}
+  .score-table th{font-size:1.35vw;padding:1.4vw .5vw}
+  .score-table td{padding:1.4vw .5vw}
   .score-table td:first-child{padding-left:1.4vw}
-  .score-table .cell-total{font-size:2.8vw}
+  .score-table .cell-total{font-size:2.5vw}
 }
 
 @media(max-width:700px){
   .pane{padding:20px 16px}
-  .score-table{font-size:14px;min-width:820px}
+  .score-table{font-size:14px;min-width:900px}
   .score-table td{padding:12px 6px}
   .score-table .cell-total{font-size:16px}
   .rank-row{grid-template-columns:40px minmax(0,1fr) auto;gap:6px 10px;padding:12px 14px 12px 10px}
